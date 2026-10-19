@@ -19,8 +19,14 @@ async def slack_events(req: Request):
 def convert_to_slack_markdown(text: str) -> str:
     if not text:
         return ""
-    text = re.sub(r'^\s*#+\s+(.*)$', r'*\1*', text, flags=re.MULTILINE)
-    text = re.sub(r'\*\*(.*?)\*\*', r'*\1*', text)
+    text = re.sub(r'^\s*#+\s+(.*)$', r'*\1*', text, flags=re.MULTILINE) # heading
+    text = re.sub(r'\[([^\]]+)\]\(([^)]+)\)', r'<\2|\1>', text) # link [hi](https://url)
+    text = re.sub(r'~~(.*?)~~', r'~\1~', text) # strikethrough
+    text = re.sub(r'\*\*(.*?)\*\*', r'*\1*', text) # bold
+    text = re.sub(r'(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)', r'_\1_', text) # italics
+    text = re.sub(r'^\s*[\*\-]\s+', r'• ', text, flags=re.MULTILINE) # bullet points
+    text = re.sub(r'^\s*>\s?(.*)$', r'> \1', text, flags=re.MULTILINE) #quote
+    
     return text
 
 @slack_app.command("/lisha-daily")
