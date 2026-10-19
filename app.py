@@ -77,6 +77,13 @@ def submit_daily_update(ack, body, view, client):
     group_id = os.environ["PINGLISHA_GROUP_ID"]
     channel_id = view["private_metadata"]
 
+    blocks = [
+        {
+            "type": "markdown",
+            "text": f"<!subteam^{group_id}>\n\n{details}"
+        }
+    ]
+
     for picture in picture_files:
         blocks.append({
             "type": "image",
@@ -87,7 +94,7 @@ def submit_daily_update(ack, body, view, client):
 
     client.chat_postMessage(
         channel=channel_id,
-        text=f"<!subteam^{group_id}> *lisha's daily recap*\n{details}",
+        text=f"my daily recap: {details}",
         blocks=[
         {
             "type": "markdown",
@@ -95,7 +102,6 @@ def submit_daily_update(ack, body, view, client):
         }
     ]
     )
-
 
 if __name__ == "__main__":
     SocketModeHandler(
