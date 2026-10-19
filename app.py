@@ -7,12 +7,12 @@ from slack_bolt.adapter.fastapi import SlackRequestHandler
 
 load_dotenv()
 
-app = App(
+slack_app = App(
     token=os.environ["SLACK_BOT_TOKEN"],
     signing_secret=os.environ["SLACK_SIGNING_SECRET"]
 )
 
-@app.command("/lisha-daily")
+@slack_app.command("/lisha-daily")
 def open_daily_modal(ack, body, client):
     ack()
 
@@ -72,8 +72,8 @@ def open_daily_modal(ack, body, client):
     )
 
 
-@app.view("lisha_daily_modal")
-def submit_daily_update(ack, body, view, client):
+@slack_app.view("lisha_daily_modal")
+def submit_daily_update(ack, view, client):
     ack()
 
     state = view["state"]["values"]
@@ -107,8 +107,8 @@ def submit_daily_update(ack, body, view, client):
     )
 
 app = FastAPI()
-handler = SlackRequestHandler(app)
+handler = SlackRequestHandler(slack_app)
 
-@api.post("/slack/events")
+@app.post("/slack/events")
 async def endpoint(req: Request):
     return await handler.handle(req)
