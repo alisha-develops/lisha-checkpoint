@@ -1,12 +1,16 @@
 import os
 
 from dotenv import load_dotenv
+from fastapi import FastAPI, Request
 from slack_bolt import App
-from slack_bolt.adapter.socket_mode import SocketModeHandler
+from slack_bolt.adapter.fastapi import SlackRequestHandler
 
 load_dotenv()
 
-app = App(token=os.environ["SLACK_BOT_TOKEN"])
+app = App(
+    token=os.environ["SLACK_BOT_TOKEN"],
+    signing_secret=os.environ["SLACK_SIGNING_SECRET"]
+)
 
 @app.command("/lisha-daily")
 def open_daily_modal(ack, body, client):
@@ -79,8 +83,11 @@ def submit_daily_update(ack, body, view, client):
     channel_id = view["private_metadata"]
     blocks = [
         {
-            "type": "markdown",
-            "text": f"hi <!subteam^{group_id}>! here is what lisha has to say today! how was your day? :D\n\n{details}"
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": f"hi <!subteam^{group_id}>! here is what lisha has to say today!\n\n{details}"
+            }
         }
     ]
 
@@ -99,9 +106,9 @@ def submit_daily_update(ack, body, view, client):
         blocks=blocks
     )
 
+api = FastAPI()
+handler = SlackRequestHandler(app)
 
-if __name__ == "__main__":
-    SocketModeHandler(
-        app,
-        os.environ["SLACK_APP_TOKEN"]
-    ).start()
+@api.post("/slack/events")
+async def endpoint(req: Request):
+    return await handler.handle(req)
