@@ -67,6 +67,7 @@ def open_daily_modal(ack, body, client):
         }
     )
 
+
 @app.view("lisha_daily_modal")
 def submit_daily_update(ack, body, view, client):
     ack()
@@ -76,11 +77,10 @@ def submit_daily_update(ack, body, view, client):
     picture_files = state["daily_picture"]["picture"].get("files", [])
     group_id = os.environ["PINGLISHA_GROUP_ID"]
     channel_id = view["private_metadata"]
-
     blocks = [
         {
             "type": "markdown",
-            "text": f"<!subteam^{group_id}>\n\n{details}"
+            "text": f"hi <!subteam^{group_id}>! here is what lisha has to say today! how was your day? :D\n\n{details}"
         }
     ]
 
@@ -90,18 +90,15 @@ def submit_daily_update(ack, body, view, client):
             "slack_file": {
                 "id": picture["id"]
             },
+            "alt_text": picture.get("name", "some picture")
         })
 
     client.chat_postMessage(
         channel=channel_id,
-        text=f"my daily recap: {details}",
-        blocks=[
-        {
-            "type": "markdown",
-            "text": details
-        }
-    ]
+        text="my daily recap",
+        blocks=blocks
     )
+
 
 if __name__ == "__main__":
     SocketModeHandler(
