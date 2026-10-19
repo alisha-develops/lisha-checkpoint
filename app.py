@@ -2,7 +2,6 @@ import os
 from fastapi import FastAPI, Request
 from slack_bolt import App
 from slack_bolt.adapter.fastapi import SlackRequestHandler
-from slack_sdk.web.internal_utils import _get_custom_headers
 
 slack_app = App(
     token=os.environ.get("SLACK_BOT_TOKEN"),
@@ -68,9 +67,9 @@ def submit_daily_update(ack, view, client):
 
     state = view["state"]["values"]
     details = state["daily_details"]["details"]["value"]
-    picture_files = state["daily_picture"]["picture"].get("files", [])
     group_id = os.environ["PINGLISHA_GROUP_ID"]
     channel_id = view["private_metadata"]
+    
     blocks = [
         {
             "type": "section",
@@ -81,24 +80,8 @@ def submit_daily_update(ack, view, client):
         }
     ]
 
-    for picture in picture_files:
-        blocks.append({
-            "type": "image",
-            "slack_file": {
-                "id": picture["id"]
-            },
-            "alt_text": picture.get("name", "some picture")
-        })
-
     client.chat_postMessage(
         channel=channel_id,
         text="my daily recap",
         blocks=blocks
     )
-
-app = FastAPI()
-handler = SlackRequestHandler(slack_app)
-
-@app.post("/slack/events")
-async def endpoint(req: Request):
-    return await handler.handle(req)
