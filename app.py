@@ -106,7 +106,7 @@ def submit_daily_update(ack, body, view, client):
         blocks=blocks
     )
 
-api = FastAPI()
+app = FastAPI()
 handler = SlackRequestHandler(app)
 
 @api.post("/slack/events")
