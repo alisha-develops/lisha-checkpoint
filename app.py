@@ -20,7 +20,7 @@ def open_daily_modal(ack, body, client):
             "private_metadata": body["channel_id"],
             "title": {
                 "type": "plain_text",
-                "text": "here's my today's recap :yay:"
+                "text": "today's recap:"
             },
             "submit": {
                 "type": "plain_text",
@@ -44,8 +44,23 @@ def open_daily_modal(ack, body, client):
                         "multiline": True,
                         "placeholder": {
                             "type": "plain_text",
-                            "text": "projects, progress, side quests, anything..."
+                            "text": "markdown is supported!"
                         }
+                    }
+                },
+                {
+                    "type": "input",
+                    "block_id": "daily_picture",
+                    "optional": True,
+                    "label": {
+                        "type": "plain_text",
+                        "text": "share a picture (optional)"
+                    },
+                    "element": {
+                        "type": "file_input",
+                        "action_id": "picture",
+                        "filetypes": ["png", "jpg", "jpeg", "gif"],
+                        "max_files": 1
                     }
                 }
             ]
@@ -56,16 +71,29 @@ def open_daily_modal(ack, body, client):
 def submit_daily_update(ack, body, view, client):
     ack()
 
-    details = (
-        view["state"]["values"]
-        ["daily_details"]["details"]["value"]
-    )
-
+    state = view["state"]["values"]
+    details = state["daily_details"]["details"]["value"]
+    picture_files = state["daily_picture"]["picture"].get("files", [])
     group_id = os.environ["PINGLISHA_GROUP_ID"]
+    channel_id = view["private_metadata"]
+
+    for picture in picture_files:
+        blocks.append({
+            "type": "image",
+            "slack_file": {
+                "id": picture["id"]
+            },
+        })
 
     client.chat_postMessage(
-        channel=view["private_metadata"],
-        text=f"<!subteam^{group_id}> *lisha's daily recap*\n{details}"
+        channel=channel_id,
+        text=f"<!subteam^{group_id}> *lisha's daily recap*\n{details}",
+        blocks=[
+        {
+            "type": "markdown",
+            "text": details
+        }
+    ]
     )
 
 
