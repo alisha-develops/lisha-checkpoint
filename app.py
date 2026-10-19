@@ -15,63 +15,64 @@ slack_app = App(
 @slack_app.command("/lisha-daily")
 def open_daily_modal(ack, body, client):
     ack()
-
-    client.views_open(
-        trigger_id=body["trigger_id"],
-        view={
-            "type": "modal",
-            "callback_id": "lisha_daily_modal",
-            "private_metadata": body["channel_id"],
-            "title": {
-                "type": "plain_text",
-                "text": "today's recap:"
-            },
-            "submit": {
-                "type": "plain_text",
-                "text": "send update"
-            },
-            "close": {
-                "type": "plain_text",
-                "text": "cancel"
-            },
-            "blocks": [
-                {
-                    "type": "input",
-                    "block_id": "daily_details",
-                    "label": {
-                        "type": "plain_text",
-                        "text": "what happened today?"
-                    },
-                    "element": {
-                        "type": "plain_text_input",
-                        "action_id": "details",
-                        "multiline": True,
-                        "placeholder": {
+    try:
+        client.views_open(
+            trigger_id=body["trigger_id"],
+            view={
+                "type": "modal",
+                "callback_id": "lisha_daily_modal",
+                "private_metadata": body["channel_id"],
+                "title": {
+                    "type": "plain_text",
+                    "text": "today's recap:"
+                },
+                "submit": {
+                    "type": "plain_text",
+                    "text": "send update"
+                },
+                "close": {
+                    "type": "plain_text",
+                    "text": "cancel"
+                },
+                "blocks": [
+                    {
+                        "type": "input",
+                        "block_id": "daily_details",
+                        "label": {
                             "type": "plain_text",
-                            "text": "markdown is supported!"
+                            "text": "what happened today?"
+                        },
+                        "element": {
+                            "type": "plain_text_input",
+                            "action_id": "details",
+                            "multiline": True,
+                            "placeholder": {
+                                "type": "plain_text",
+                                "text": "markdown is supported!"
+                            }
+                        }
+                    },
+                    {
+                        "type": "input",
+                        "block_id": "daily_picture",
+                        "optional": True,
+                        "label": {
+                            "type": "plain_text",
+                            "text": "share a picture (optional)"
+                        },
+                        "element": {
+                            "type": "file_input",
+                            "action_id": "picture",
+                            "filetypes": ["png", "jpg", "jpeg", "gif"],
+                            "max_files": 1
                         }
                     }
-                },
-                {
-                    "type": "input",
-                    "block_id": "daily_picture",
-                    "optional": True,
-                    "label": {
-                        "type": "plain_text",
-                        "text": "share a picture (optional)"
-                    },
-                    "element": {
-                        "type": "file_input",
-                        "action_id": "picture",
-                        "filetypes": ["png", "jpg", "jpeg", "gif"],
-                        "max_files": 1
-                    }
-                }
-            ]
-        }
-    )
-
-
+                ]
+            }
+        )
+    except Exception as e:
+        print(f"ERROR OPENING MODAL: {e}")
+        
 @slack_app.view("lisha_daily_modal")
 def submit_daily_update(ack, view, client):
     ack()
