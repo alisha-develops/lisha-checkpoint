@@ -1,9 +1,9 @@
 import os
+import re
 from fastapi import FastAPI, Request
 from slack_bolt import App
 from slack_bolt.adapter.fastapi import SlackRequestHandler
 
-# Initialize Slack App
 slack_app = App(
     token=os.environ.get("SLACK_BOT_TOKEN"),
     signing_secret=os.environ.get("SLACK_SIGNING_SECRET")
@@ -15,6 +15,13 @@ handler = SlackRequestHandler(slack_app)
 @app.post("/slack/events")
 async def slack_events(req: Request):
     return await handler.handle(req)
+
+def convert_to_slack_markdown(text: str) -> str:
+    if not text:
+        return ""
+    text = re.sub(r'^\s*#+\s+(.*)$', r'*\1*', text, flags=re.MULTILINE)
+    text = re.sub(r'\*\*(.*?)\*\*', r'*\1*', text)
+    return text
 
 @slack_app.command("/lisha-daily")
 def open_daily_modal(ack, body, client):
@@ -80,8 +87,8 @@ def submit_daily_update(ack, view, client):
     ack()
 
     state = view["state"]["values"]
-    details = state["daily_details"]["details"]["value"]
-
+    raw_details = state["daily_details"]["details"]["value"]
+    details = convert_to_slack_markdown(raw_details)
     picture_block = state.get("daily_picture", {}).get("picture", {})
     picture_files = picture_block.get("files", [])
     
