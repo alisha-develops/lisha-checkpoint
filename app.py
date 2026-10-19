@@ -1,16 +1,20 @@
 import os
-
-from dotenv import load_dotenv
 from fastapi import FastAPI, Request
 from slack_bolt import App
 from slack_bolt.adapter.fastapi import SlackRequestHandler
-
-load_dotenv()
+from slack_sdk.web.internal_utils import _get_custom_headers
 
 slack_app = App(
-    token=os.environ["SLACK_BOT_TOKEN"],
-    signing_secret=os.environ["SLACK_SIGNING_SECRET"]
+    token=os.environ.get("SLACK_BOT_TOKEN"),
+    signing_secret=os.environ.get("SLACK_SIGNING_SECRET")
 )
+
+app = FastAPI()
+handler = SlackRequestHandler(slack_app)
+
+@app.post("/slack/events")
+async def slack_events(req: Request):
+    return await handler.handle(req)
 
 @slack_app.command("/lisha-daily")
 def open_daily_modal(ack, body, client):
@@ -51,28 +55,13 @@ def open_daily_modal(ack, body, client):
                                 "text": "markdown is supported!"
                             }
                         }
-                    },
-                    {
-                        "type": "input",
-                        "block_id": "daily_picture",
-                        "optional": True,
-                        "label": {
-                            "type": "plain_text",
-                            "text": "share a picture (optional)"
-                        },
-                        "element": {
-                            "type": "file_input",
-                            "action_id": "picture",
-                            "filetypes": ["png", "jpg", "jpeg", "gif"],
-                            "max_files": 1
-                        }
                     }
                 ]
             }
         )
     except Exception as e:
         print(f"ERROR OPENING MODAL: {e}")
-        
+
 @slack_app.view("lisha_daily_modal")
 def submit_daily_update(ack, view, client):
     ack()
