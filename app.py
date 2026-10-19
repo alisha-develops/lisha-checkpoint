@@ -3,6 +3,7 @@ from fastapi import FastAPI, Request
 from slack_bolt import App
 from slack_bolt.adapter.fastapi import SlackRequestHandler
 
+# Initialize Slack App
 slack_app = App(
     token=os.environ.get("SLACK_BOT_TOKEN"),
     signing_secret=os.environ.get("SLACK_SIGNING_SECRET")
@@ -54,6 +55,19 @@ def open_daily_modal(ack, body, client):
                                 "text": "markdown is supported!"
                             }
                         }
+                    },
+                    {
+                        "type": "input",
+                        "block_id": "daily_picture",
+                        "optional": True,
+                        "label": {
+                            "type": "plain_text",
+                            "text": "attach pictures"
+                        },
+                        "element": {
+                            "type": "file_input",
+                            "action_id": "picture"
+                        }
                     }
                 ]
             }
@@ -67,9 +81,13 @@ def submit_daily_update(ack, view, client):
 
     state = view["state"]["values"]
     details = state["daily_details"]["details"]["value"]
-    group_id = os.environ["PINGLISHA_GROUP_ID"]
-    channel_id = view["private_metadata"]
+
+    picture_block = state.get("daily_picture", {}).get("picture", {})
+    picture_files = picture_block.get("files", [])
     
+    group_id = os.environ.get("PINGLISHA_GROUP_ID", "")
+    channel_id = view["private_metadata"]
+
     blocks = [
         {
             "type": "section",
@@ -80,8 +98,20 @@ def submit_daily_update(ack, view, client):
         }
     ]
 
-    client.chat_postMessage(
-        channel=channel_id,
-        text="my daily recap",
-        blocks=blocks
-    )
+    for picture in picture_files:
+        blocks.append({
+            "type": "image",
+            "slack_file": {
+                "id": picture["id"]
+            },
+            "alt_text": picture.get("name", "attached picture")
+        })
+
+    try:
+        client.chat_postMessage(
+            channel=channel_id,
+            text="my daily recap",
+            blocks=blocks
+        )
+    except Exception as e:
+        print(f"ERROR POSTING MESSAGE: {e}")
