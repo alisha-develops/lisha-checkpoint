@@ -120,7 +120,7 @@ def handle_lisha_delete(ack, body, client):
             client.chat_postEphemeral(
                 channel=channel_id,
                 user=user_id,
-                text="oops! only alisha can command me to delete messages"
+                text="uh oh! looks like someone is trying to be alisha :loll: (only she can command me to delete messages)"
             )
         except Exception as e:
             print(f"ERROR SENDING DELETE WARNING: {e}")
