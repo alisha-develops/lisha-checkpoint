@@ -111,14 +111,15 @@ def handle_button_click(ack, body, client):
 async def cron_checkpoint():
     try:
         user_id = os.environ.get("ALISHA_SLACK_USER_ID")
-        
+        channel_id = os.environ.get("SLACK_CHANNEL_ID") 
         parent_msg = slack_app.client.chat_postMessage(
-            channel=user_id,
-            text="alisha, how was your day?"
+            channel=channel_id,
+            text=f"<@{user_id}> alisha, how was your day?"
         )
         parent_ts = parent_msg["ts"]
+
         slack_app.client.chat_postMessage(
-            channel=user_id,
+            channel=channel_id,
             thread_ts=parent_ts,
             text="click below to share your daily update!",
             blocks=[
