@@ -9,7 +9,8 @@ from web import router as web_router
 slack_app = App(
     token=os.environ.get("SLACK_BOT_TOKEN"),
     signing_secret=os.environ.get("SLACK_SIGNING_SECRET"),
-    token_verification_enabled=False
+    token_verification_enabled=False,
+    process_before_response=True,
 )
 
 app = FastAPI()
@@ -166,9 +167,7 @@ async def cron_checkpoint():
     except Exception as e:
         print(f"ERROR IN CRON CHECKPOINT: {e}")
         return {"status": "error", "message": str(e)}
-
-import asyncio
-
+    
 @slack_app.view("lisha_daily_modal")
 def submit_daily_update(ack, view, client):
     ack()
