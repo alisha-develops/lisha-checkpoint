@@ -202,17 +202,13 @@ def submit_daily_update(ack, view, client):
         "text": main_text,
         "blocks": blocks
     }
+    
     if thread_ts:
         post_kwargs["thread_ts"] = thread_ts
         post_kwargs["reply_broadcast"] = True
 
     try:
         client.chat_postMessage(**post_kwargs)
-
-        client.chat_postMessage(
-            channel=channel_id,
-            text=":threadparrot:"
-        )
 
         if thread_ts:
             try:
@@ -222,10 +218,10 @@ def submit_daily_update(ack, view, client):
                     timestamp=thread_ts
                 )
             except Exception as rx_err:
-                print(f"REACTION ERROR: {rx_err}")
+                print(f"ERROR ADDING REACTION: {rx_err}")
 
     except Exception as e:
-        print(f"ERROR POSTING UPDATE: {e}")
+        print(f"ERROR POSTING DAILY UPDATE: {e}")
 
 @app.post("/slack/events")
 async def slack_events(req: Request):
