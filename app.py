@@ -114,7 +114,7 @@ async def cron_checkpoint():
         channel_id = os.environ.get("SLACK_CHANNEL_ID") 
         parent_msg = slack_app.client.chat_postMessage(
             channel=channel_id,
-            text=f"<@{user_id}> alisha, how was your day?"
+            text=f"hello alisha!<@{user_id}>how was your day? :3"
         )
         parent_ts = parent_msg["ts"]
 
@@ -174,7 +174,7 @@ def submit_daily_update(ack, view, client):
                 "type": "mrkdwn",
                 "text": (
                     f"hi hello <!subteam^{group_id}>!\n"
-                    "here is what lisha has to say today!"
+                    "here is what lisha has to say today:"
                 )
             }
         },
@@ -201,8 +201,10 @@ def submit_daily_update(ack, view, client):
             "text": main_text,
             "blocks": blocks
         }
+        
         if thread_ts:
             post_kwargs["thread_ts"] = thread_ts
+            post_kwargs["reply_broadcast"] = True
 
         client.chat_postMessage(**post_kwargs)
 
@@ -214,6 +216,15 @@ def submit_daily_update(ack, view, client):
             parrot_kwargs["thread_ts"] = thread_ts
 
         client.chat_postMessage(**parrot_kwargs)
+        if thread_ts:
+            try:
+                client.reactions_add(
+                    channel=channel_id,
+                    name="tickalisha",
+                    timestamp=thread_ts
+                )
+            except Exception as rx_err:
+                print(f"ERROR ADDING REACTION: {rx_err}")
 
     except Exception as e:
         print(f"ERROR POSTING MESSAGE: {e}")
