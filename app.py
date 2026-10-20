@@ -2,14 +2,18 @@ import os
 from fastapi import FastAPI, Request
 from slack_bolt import App
 from slack_bolt.adapter.fastapi import SlackRequestHandler
+from web import router as web_router
 
 slack_app = App(
     token=os.environ.get("SLACK_BOT_TOKEN"),
-    signing_secret=os.environ.get("SLACK_SIGNING_SECRET")
+    signing_secret=os.environ.get("SLACK_SIGNING_SECRET"),
+    token_verification_enabled=False
 )
 
 app = FastAPI()
 handler = SlackRequestHandler(slack_app)
+
+app.include_router(web_router)
 
 @app.post("/slack/events")
 async def slack_events(req: Request):
