@@ -228,6 +228,11 @@ def submit_daily_update(ack, view, client):
     try:
         client.chat_postMessage(**post_kwargs)
 
+        client.chat_postMessage(
+            channel=channel_id,
+            text=":threadparrot:"
+        )
+
         if thread_ts:
             try:
                 client.reactions_add(
