@@ -192,8 +192,9 @@ def submit_daily_update(ack, view, client):
             "text": {
                 "type": "mrkdwn",
                 "text": (
-                    f"hi hello <!subteam^{group_id}>!\n"
-                    "here is what lisha has to say today:"
+                    # f"hi hello <!subteam^{group_id}>!\n"
+                    # "here is what lisha has to say today:"
+                    f"hi hello! here is what lisha has to say today:"
                 )
             }
         },
