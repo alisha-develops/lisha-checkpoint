@@ -150,6 +150,8 @@ async def cron_checkpoint():
         print(f"ERROR IN CRON CHECKPOINT: {e}")
         return {"status": "error", "message": str(e)}
 
+import asyncio
+
 @slack_app.view("lisha_daily_modal")
 def submit_daily_update(ack, view, client):
     ack()
@@ -193,19 +195,18 @@ def submit_daily_update(ack, view, client):
             "alt_text": picture.get("name", "attached picture")
         })
 
+    main_text = f"hi <!subteam^{group_id}>! here is what lisha has to say today!\n\n{details}"
+
+    post_kwargs = {
+        "channel": channel_id,
+        "text": main_text,
+        "blocks": blocks
+    }
+    if thread_ts:
+        post_kwargs["thread_ts"] = thread_ts
+        post_kwargs["reply_broadcast"] = True
+
     try:
-        main_text = f"hi <!subteam^{group_id}>! here is what lisha has to say today!\n\n{details}"
-
-        post_kwargs = {
-            "channel": channel_id,
-            "text": main_text,
-            "blocks": blocks
-        }
-        
-        if thread_ts:
-            post_kwargs["thread_ts"] = thread_ts
-            post_kwargs["reply_broadcast"] = True
-
         client.chat_postMessage(**post_kwargs)
 
         client.chat_postMessage(
@@ -214,20 +215,17 @@ def submit_daily_update(ack, view, client):
         )
 
         if thread_ts:
-            def add_rx():
-                try:
-                    client.reactions_add(
-                        channel=channel_id,
-                        name="tickalisha",
-                        timestamp=thread_ts
-                    )
-                except Exception as rx_err:
-                    print(f"ERROR ADDING REACTION: {rx_err}")
-
-            ThreadPoolExecutor(max_workers=1).submit(add_rx)
+            try:
+                client.reactions_add(
+                    channel=channel_id,
+                    name="tickalisha",
+                    timestamp=thread_ts
+                )
+            except Exception as rx_err:
+                print(f"REACTION ERROR: {rx_err}")
 
     except Exception as e:
-        print(f"ERROR POSTING MESSAGE: {e}")
+        print(f"ERROR POSTING UPDATE: {e}")
 
 @app.post("/slack/events")
 async def slack_events(req: Request):
