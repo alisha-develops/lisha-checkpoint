@@ -99,9 +99,11 @@ def handle_button_click(ack, body, client):
     if clicker_user_id != allowed_user_id:
         try:
             channel_id = body["channel"]["id"]
+            thread_ts = body["message"].get("thread_ts") or body["message"]["ts"]
             client.chat_postEphemeral(
                 channel=channel_id,
                 user=clicker_user_id,
+                thread_ts=thread_ts,
                 text="YOU ARE NOT ALISHA GRR"
             )
         except Exception as e:
