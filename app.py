@@ -214,14 +214,17 @@ def submit_daily_update(ack, view, client):
         )
 
         if thread_ts:
-            try:
-                client.reactions_add(
-                    channel=channel_id,
-                    name="tickalisha",
-                    timestamp=thread_ts
-                )
-            except Exception as rx_err:
-                print(f"ERROR ADDING REACTION: {rx_err}")
+            def add_rx():
+                try:
+                    client.reactions_add(
+                        channel=channel_id,
+                        name="tickalisha",
+                        timestamp=thread_ts
+                    )
+                except Exception as rx_err:
+                    print(f"ERROR ADDING REACTION: {rx_err}")
+
+            ThreadPoolExecutor(max_workers=1).submit(add_rx)
 
     except Exception as e:
         print(f"ERROR POSTING MESSAGE: {e}")
