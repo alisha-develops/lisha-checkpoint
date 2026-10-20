@@ -120,16 +120,14 @@ def submit_daily_update(ack, view, client):
         })
 
     try:
-        response = client.chat_postMessage(
+        client.chat_postMessage(
             channel=channel_id,
-            text=f"hi hello <!subteam^{group_id}>! here is what lisha has to say today!\n\n{details}",
-        blocks=blocks
+            text=f"hi <!subteam^{group_id}>! here is what lisha has to say today!\n\n{details}",
+            blocks=blocks
         )
-
-        client.reactions_add(
+        client.chat_postMessage(
             channel=channel_id,
-            timestamp=response["ts"],
-            name="threadparrot"
+            text=":threadparrot:"
         )
 
     except Exception as e:
