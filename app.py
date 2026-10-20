@@ -122,22 +122,16 @@ def submit_daily_update(ack, view, client):
 
     try:
         main_text = f"hi <!subteam^{group_id}>! here is what lisha has to say today!\n\n{details}"
-        def post_main():
-            return client.chat_postMessage(
-                channel=channel_id,
-                text=main_text,
-                blocks=blocks
-            )
-        def post_parrot():
-            return client.chat_postMessage(
-                channel=channel_id,
-                text=":threadparrot:"
-            )
-        with ThreadPoolExecutor(max_workers=2) as executor:
-            future_main = executor.submit(post_main)
-            future_parrot = executor.submit(post_parrot)
-            future_main.result()
-            future_parrot.result()
+
+        client.chat_postMessage(
+            channel=channel_id,
+            text=main_text,
+            blocks=blocks
+        )
+        client.chat_postMessage(
+            channel=channel_id,
+            text=":threadparrot:"
+        )
 
     except Exception as e:
         print(f"ERROR POSTING MESSAGE: {e}")
