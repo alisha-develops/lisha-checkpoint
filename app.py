@@ -114,7 +114,7 @@ async def cron_checkpoint():
         channel_id = os.environ.get("SLACK_CHANNEL_ID") 
         parent_msg = slack_app.client.chat_postMessage(
             channel=channel_id,
-            text=f"hello alisha!<@{user_id}>how was your day? :3"
+            text=f"helloo <@{user_id}>! how was your dayy? :3"
         )
         parent_ts = parent_msg["ts"]
 
@@ -208,14 +208,11 @@ def submit_daily_update(ack, view, client):
 
         client.chat_postMessage(**post_kwargs)
 
-        parrot_kwargs = {
-            "channel": channel_id,
-            "text": ":threadparrot:"
-        }
-        if thread_ts:
-            parrot_kwargs["thread_ts"] = thread_ts
+        client.chat_postMessage(
+            channel=channel_id,
+            text=":threadparrot:"
+        )
 
-        client.chat_postMessage(**parrot_kwargs)
         if thread_ts:
             try:
                 client.reactions_add(
@@ -228,7 +225,6 @@ def submit_daily_update(ack, view, client):
 
     except Exception as e:
         print(f"ERROR POSTING MESSAGE: {e}")
-
 
 @app.post("/slack/events")
 async def slack_events(req: Request):
