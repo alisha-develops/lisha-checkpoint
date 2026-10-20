@@ -92,6 +92,21 @@ def handle_slash_command(ack, body, client):
 @slack_app.action("open_lisha_modal")
 def handle_button_click(ack, body, client):
     ack()
+    
+    clicker_user_id = body["user"]["id"]
+    allowed_user_id = os.environ.get("ALISHA_SLACK_USER_ID")
+
+    if clicker_user_id != allowed_user_id:
+        try:
+            channel_id = body["channel"]["id"]
+            client.chat_postEphemeral(
+                channel=channel_id,
+                user=clicker_user_id,
+                text="YOU ARE NOT ALISHA GRR"
+            )
+        except Exception as e:
+            print(f"ERROR SENDING EPHEMERAL MSG: {e}")
+        return
     try:
         channel_id = body["channel"]["id"]
         thread_ts = body["message"].get("thread_ts") or body["message"]["ts"]
