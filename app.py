@@ -1,6 +1,7 @@
 import os
+import json
 from concurrent.futures import ThreadPoolExecutor
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response
 from slack_bolt import App
 from slack_bolt.adapter.fastapi import SlackRequestHandler
 from web import router as web_router
@@ -16,73 +17,145 @@ handler = SlackRequestHandler(slack_app)
 
 app.include_router(web_router)
 
-@app.post("/slack/events")
-async def slack_events(req: Request):
-    return await handler.handle(req)
+def trigger_modal(client, trigger_id, channel_id, thread_ts=None):
+    metadata = json.dumps({
+        "channel_id": channel_id,
+        "thread_ts": thread_ts
+    })
 
-@slack_app.command("/lisha-daily")
-def open_daily_modal(ack, body, client):
-    ack()
-    try:
-        client.views_open(
-            trigger_id=body["trigger_id"],
-            view={
-                "type": "modal",
-                "callback_id": "lisha_daily_modal",
-                "private_metadata": body["channel_id"],
-                "title": {
-                    "type": "plain_text",
-                    "text": "today's recap:"
-                },
-                "submit": {
-                    "type": "plain_text",
-                    "text": "send update"
-                },
-                "close": {
-                    "type": "plain_text",
-                    "text": "cancel"
-                },
-                "blocks": [
-                    {
-                        "type": "input",
-                        "block_id": "daily_details",
-                        "label": {
-                            "type": "plain_text",
-                            "text": "what happened today?"
-                        },
-                        "element": {
-                            "type": "plain_text_input",
-                            "action_id": "details",
-                            "multiline": True,
-                            "placeholder": {
-                                "type": "plain_text",
-                                "text": "markdown is supported!"
-                            }
-                        }
+    client.views_open(
+        trigger_id=trigger_id,
+        view={
+            "type": "modal",
+            "callback_id": "lisha_daily_modal",
+            "private_metadata": metadata,
+            "title": {
+                "type": "plain_text",
+                "text": "today's recap:"
+            },
+            "submit": {
+                "type": "plain_text",
+                "text": "send update"
+            },
+            "close": {
+                "type": "plain_text",
+                "text": "cancel"
+            },
+            "blocks": [
+                {
+                    "type": "input",
+                    "block_id": "daily_details",
+                    "label": {
+                        "type": "plain_text",
+                        "text": "what happened today?"
                     },
-                    {
-                        "type": "input",
-                        "block_id": "daily_picture",
-                        "optional": True,
-                        "label": {
+                    "element": {
+                        "type": "plain_text_input",
+                        "action_id": "details",
+                        "multiline": True,
+                        "placeholder": {
                             "type": "plain_text",
-                            "text": "attach pictures"
-                        },
-                        "element": {
-                            "type": "file_input",
-                            "action_id": "picture"
+                            "text": "markdown is supported!"
                         }
                     }
-                ]
-            }
+                },
+                {
+                    "type": "input",
+                    "block_id": "daily_picture",
+                    "optional": True,
+                    "label": {
+                        "type": "plain_text",
+                        "text": "attach pictures"
+                    },
+                    "element": {
+                        "type": "file_input",
+                        "action_id": "picture"
+                    }
+                }
+            ]
+        }
+    )
+
+
+@slack_app.command("/lisha-daily")
+def handle_slash_command(ack, body, client):
+    ack()
+    try:
+        trigger_modal(
+            client=client,
+            trigger_id=body["trigger_id"],
+            channel_id=body["channel_id"]
         )
     except Exception as e:
         print(f"ERROR OPENING MODAL: {e}")
 
+@slack_app.action("open_lisha_modal")
+def handle_button_click(ack, body, client):
+    ack()
+    try:
+        channel_id = body["channel"]["id"]
+        thread_ts = body["message"].get("thread_ts") or body["message"]["ts"]
+
+        trigger_modal(
+            client=client,
+            trigger_id=body["trigger_id"],
+            channel_id=channel_id,
+            thread_ts=thread_ts
+        )
+    except Exception as e:
+        print(f"ERROR OPENING MODAL FROM BUTTON: {e}")
+
+
+@app.get("/api/cron-checkpoint")
+@app.post("/api/cron-checkpoint")
+async def cron_checkpoint():
+    try:
+        user_id = os.environ.get("ALISHA_SLACK_USER_ID")
+        
+        parent_msg = slack_app.client.chat_postMessage(
+            channel=user_id,
+            text="alisha, how was your day?"
+        )
+        parent_ts = parent_msg["ts"]
+        slack_app.client.chat_postMessage(
+            channel=user_id,
+            thread_ts=parent_ts,
+            text="click below to share your daily update!",
+            blocks=[
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": "click below to share your daily update:"
+                    }
+                },
+                {
+                    "type": "actions",
+                    "elements": [
+                        {
+                            "type": "button",
+                            "text": {
+                                "type": "plain_text",
+                                "text": "share daily update"
+                            },
+                            "action_id": "open_lisha_modal"
+                        }
+                    ]
+                }
+            ]
+        )
+        return {"status": "success"}
+    except Exception as e:
+        print(f"ERROR IN CRON CHECKPOINT: {e}")
+        return {"status": "error", "message": str(e)}
 
 @slack_app.view("lisha_daily_modal")
 def submit_daily_update(ack, view, client):
     ack()
+
+    metadata = json.loads(view["private_metadata"])
+    channel_id = metadata["channel_id"]
+    thread_ts = metadata.get("thread_ts")
 
     state = view["state"]["values"]
     raw_details = state["daily_details"]["details"]["value"]
@@ -92,7 +165,6 @@ def submit_daily_update(ack, view, client):
     picture_files = picture_block.get("files", [])
 
     group_id = os.environ.get("PINGLISHA_GROUP_ID", "")
-    channel_id = view["private_metadata"]
 
     blocks = [
         {
@@ -101,7 +173,7 @@ def submit_daily_update(ack, view, client):
                 "type": "mrkdwn",
                 "text": (
                     f"hi hello <!subteam^{group_id}>!\n"
-                    "here is what lisha has to say today:"
+                    "here is what lisha has to say today!"
                 )
             }
         },
@@ -123,15 +195,29 @@ def submit_daily_update(ack, view, client):
     try:
         main_text = f"hi <!subteam^{group_id}>! here is what lisha has to say today!\n\n{details}"
 
-        client.chat_postMessage(
-            channel=channel_id,
-            text=main_text,
-            blocks=blocks
-        )
-        client.chat_postMessage(
-            channel=channel_id,
-            text=":threadparrot:"
-        )
+        post_kwargs = {
+            "channel": channel_id,
+            "text": main_text,
+            "blocks": blocks
+        }
+        if thread_ts:
+            post_kwargs["thread_ts"] = thread_ts
+
+        client.chat_postMessage(**post_kwargs)
+
+        parrot_kwargs = {
+            "channel": channel_id,
+            "text": ":threadparrot:"
+        }
+        if thread_ts:
+            parrot_kwargs["thread_ts"] = thread_ts
+
+        client.chat_postMessage(**parrot_kwargs)
 
     except Exception as e:
         print(f"ERROR POSTING MESSAGE: {e}")
+
+
+@app.post("/slack/events")
+async def slack_events(req: Request):
+    return await handler.handle(req)
