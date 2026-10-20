@@ -211,7 +211,8 @@ def submit_daily_update(ack, view, client):
             "alt_text": picture.get("name", "attached picture")
         })
 
-    main_text = f"hi <!subteam^{group_id}>! here is what lisha has to say today!\n\n{details}"
+    # main_text = f"hi <!subteam^{group_id}>! here is what lisha has to say today!\n\n{details}"
+    main_text = f"hi hello people! here is what lisha has to say today:\n\n{details}"
 
     post_kwargs = {
         "channel": channel_id,
