@@ -1,7 +1,6 @@
 import os
 import json
-from concurrent.futures import ThreadPoolExecutor
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, Request
 from slack_bolt import App
 from slack_bolt.adapter.fastapi import SlackRequestHandler
 from web import router as web_router
@@ -78,17 +77,17 @@ def trigger_modal(client, trigger_id, channel_id, thread_ts=None):
     )
 
 
-@slack_app.command("/lisha-daily")
-def handle_slash_command(ack, body, client):
-    ack()
-    try:
-        trigger_modal(
-            client=client,
-            trigger_id=body["trigger_id"],
-            channel_id=body["channel_id"]
-        )
-    except Exception as e:
-        print(f"ERROR OPENING MODAL: {e}")
+# @slack_app.command("/lisha-daily")
+# def handle_slash_command(ack, body, client):
+#     ack()
+#     try:
+#         trigger_modal(
+#             client=client,
+#             trigger_id=body["trigger_id"],
+#             channel_id=body["channel_id"]
+#         )
+#     except Exception as e:
+#         print(f"ERROR OPENING MODAL: {e}")
 
 @slack_app.action("open_lisha_modal")
 def handle_button_click(ack, body, client):
