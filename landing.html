@@ -4,10 +4,89 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>redirect to slack..</title>
+    <style>
+        *{
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #292929;
+            background-image: url("https://www.transparenttextures.com/patterns/shley-tree-2.png");
+            color: #b9b9b9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 24px;
+        }
+
+        h1 {
+            font-size: 1.55rem;
+            line-height: 1.5;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        h1 span {
+            background-color: #294936 !important;
+            color: #f5e9d0 !important;
+            padding: 3px 6px;
+        }
+
+        a {
+            color: #426b49;
+            text-decoration-thickness: 1px;
+            text-underline-offset: 3px;
+        }
+
+        h1 a:hover {
+            background-color: #dce5c8;
+        }
+
+        p {
+            font-size: 0.85rem;
+            line-height: 1.8;
+            margin-bottom: 18px;
+        }
+
+        .code-tag {
+            background-color: #e6e4ce;
+            color: #294936;
+            border: 1px solid #c6c9ac;
+            padding: 3px 6px;
+            border-radius: 2px;
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+
+        .btn {
+            display: inline-block;
+            margin-top: 4px;
+            text-decoration:underline;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #f5e9d0;
+            background-color: #294936;
+            border: 2px solid #294936;
+            padding: 13px 18px;
+        }
+
+        @media (max-width: 420px) {
+            .card {
+                padding: 28px 20px;
+            }
+
+            h1 {
+                font-size: 1.3rem;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="card">
-        <h1>lisha-checkpoint is <a href="https://adventurous-alisha.vercel.app/">alisha's</a> personal bot that's now active!</h1>
+        <h1><span>lisha-checkpoint</span> is <a href="https://adventurous-alisha.vercel.app/">alisha's</a> personal bot that's now active!</h1>
         <p>this vercel serverless deployment handles background slack event webhooks for <span class="code-tag">/lisha-daily</span>.</p>
         <p>to use the bot and post daily updates, head over to the slack :D (my channel is private buddy sorry)</p>
         <a href="https://app.slack.com/client/E09V59WQY1E" class="btn" target="_blank">dm alisha for invitation!</a>
