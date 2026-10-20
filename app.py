@@ -1,4 +1,5 @@
 import os
+import re
 import json
 from fastapi import FastAPI, Request
 from slack_bolt import App
@@ -88,6 +89,77 @@ def trigger_modal(client, trigger_id, channel_id, thread_ts=None):
 #         )
 #     except Exception as e:
 #         print(f"ERROR OPENING MODAL: {e}")
+
+def extract_ts_from_input(text):
+    """
+    extracts timestamp from either a raw ts string (e.g. 1712345678.123456)
+    or a slack message link (e.g. https://workspace.slack.com/archives/C1234/p1712345678123456)
+    """
+    text = text.strip()
+
+    url_match = re.search(r"/p(\d{10})(\d{6})", text)
+    if url_match:
+        return f"{url_match.group(1)}.{url_match.group(2)}"
+        
+    ts_match = re.search(r"\d{10}\.\d{6}", text)
+    if ts_match:
+        return ts_match.group(0)
+        
+    return None
+
+@slack_app.command("/lisha-delete")
+def handle_lisha_delete(ack, body, client):
+    ack()
+
+    user_id = body["user_id"]
+    allowed_id = os.environ.get("ALISHA_SLACK_USER_ID")
+    channel_id = body["channel_id"]
+
+    if user_id != allowed_id:
+        try:
+            client.chat_postEphemeral(
+                channel=channel_id,
+                user=user_id,
+                text="oops! only alisha can command me to delete messages"
+            )
+        except Exception as e:
+            print(f"ERROR SENDING DELETE WARNING: {e}")
+        return
+    input_text = body.get("text", "").strip()
+    target_ts = extract_ts_from_input(input_text)
+
+    if not target_ts:
+        try:
+            client.chat_postEphemeral(
+                channel=channel_id,
+                user=user_id,
+                text="usage: `/lisha-delete [message_link_or_timestamp]`"
+            )
+        except Exception as e:
+            print(f"ERROR SENDING USAGE WARNING: {e}")
+        return
+
+    try:
+        client.chat_delete(
+            channel=channel_id,
+            ts=target_ts
+        )
+        
+        client.chat_postEphemeral(
+            channel=channel_id,
+            user=user_id,
+            text="message successfully deleted!"
+        )
+    except Exception as e:
+        print(f"ERROR DELETING MESSAGE: {e}")
+        try:
+            client.chat_postEphemeral(
+                channel=channel_id,
+                user=user_id,
+                text=f"failed to delete message: {e}"
+            )
+        except Exception:
+            pass
 
 @slack_app.action("open_lisha_modal")
 def handle_button_click(ack, body, client):
