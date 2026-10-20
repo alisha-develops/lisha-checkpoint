@@ -1,4 +1,5 @@
 import os
+import threading
 from fastapi import FastAPI, Request
 from slack_bolt import App
 from slack_bolt.adapter.fastapi import SlackRequestHandler
@@ -125,10 +126,13 @@ def submit_daily_update(ack, view, client):
             text=f"hi <!subteam^{group_id}>! here is what lisha has to say today!\n\n{details}",
             blocks=blocks
         )
-        client.chat_postMessage(
-            channel=channel_id,
-            text=":threadparrot:"
-        )
+        threading.Thread(
+            target=client.chat_postMessage,
+            kwargs={
+                "channel": channel_id,
+                "text": ":threadparrot:"
+            }
+        ).start()
 
     except Exception as e:
         print(f"ERROR POSTING MESSAGE: {e}")
