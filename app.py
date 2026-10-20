@@ -1,5 +1,5 @@
 import os
-import threading
+from concurrent.futures import ThreadPoolExecutor
 from fastapi import FastAPI, Request
 from slack_bolt import App
 from slack_bolt.adapter.fastapi import SlackRequestHandler
@@ -121,18 +121,23 @@ def submit_daily_update(ack, view, client):
         })
 
     try:
-        client.chat_postMessage(
-            channel=channel_id,
-            text=f"hi <!subteam^{group_id}>! here is what lisha has to say today!\n\n{details}",
-            blocks=blocks
-        )
-        threading.Thread(
-            target=client.chat_postMessage,
-            kwargs={
-                "channel": channel_id,
-                "text": ":threadparrot:"
-            }
-        ).start()
+        main_text = f"hi <!subteam^{group_id}>! here is what lisha has to say today!\n\n{details}"
+        def post_main():
+            return client.chat_postMessage(
+                channel=channel_id,
+                text=main_text,
+                blocks=blocks
+            )
+        def post_parrot():
+            return client.chat_postMessage(
+                channel=channel_id,
+                text=":threadparrot:"
+            )
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            future_main = executor.submit(post_main)
+            future_parrot = executor.submit(post_parrot)
+            future_main.result()
+            future_parrot.result()
 
     except Exception as e:
         print(f"ERROR POSTING MESSAGE: {e}")
