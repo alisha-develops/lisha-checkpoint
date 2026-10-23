@@ -262,9 +262,9 @@ def submit_daily_update(ack, view, client):
             "text": {
                 "type": "mrkdwn",
                 "text": (
-                    # f"hi hello <!subteam^{group_id}>!\n"
-                    # "here is what lisha has to say today:"
-                    f"hi hello! here is what lisha has to say today:"
+                    f"hi hello <!subteam^{group_id}>!\n"
+                    "here is what lisha has to say today:"
+                    # f"hi hello! here is what lisha has to say today:"
                 )
             }
         },
@@ -283,8 +283,8 @@ def submit_daily_update(ack, view, client):
             "alt_text": picture.get("name", "attached picture")
         })
 
-    # main_text = f"hi <!subteam^{group_id}>! here is what lisha has to say today!\n\n{details}"
-    main_text = f"hi hello people! here is what lisha has to say today:\n\n{details}"
+    main_text = f"hi <!subteam^{group_id}>! here is what lisha has to say today!\n\n{details}"
+    # main_text = f"hi hello people! here is what lisha has to say today:\n\n{details}"
 
     post_kwargs = {
         "channel": channel_id,
